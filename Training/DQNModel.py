@@ -55,9 +55,9 @@ class DQN:
       #Two hidden layers (300,300), their activation is ReLu
       #One output layer with action_space of nodes, activation is linear.
       model = Sequential()
-      model.add(Dense(300, input_dim=self.input_dim))
+      model.add(Dense(200, input_dim=self.input_dim))
       model.add(Activation('relu'))
-      model.add(Dense(300))
+      model.add(Dense(200))
       model.add(Activation('relu'))
       model.add(Dense(self.action_space))
       model.add(Activation('linear'))    

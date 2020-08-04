@@ -20,12 +20,12 @@ if len(sys.argv) == 3:
     PORT = int(sys.argv[2])
 
 # load json and create model
-json_file = open('../../Training/TrainedModels/DQNmodel_20200804-2239_ep1800.json', 'r')
+json_file = open('../../Training/TrainedModels/DQNmodel_20200805-0531_ep1800.json', 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 DQNAgent = model_from_json(loaded_model_json)
 # load weights into new model
-DQNAgent.load_weights('../../Training/TrainedModels/DQNmodel_20200804-2239_ep1800.h5')
+DQNAgent.load_weights('../../Training/TrainedModels/DQNmodel_20200805-0531_ep1800.h5')
 print("Loaded model from disk")
 status_map = {0: "STATUS_PLAYING", 1: "STATUS_ELIMINATED_WENT_OUT_MAP", 2: "STATUS_ELIMINATED_OUT_OF_ENERGY",
                   3: "STATUS_ELIMINATED_INVALID_ACTION", 4: "STATUS_STOP_EMPTY_GOLD", 5: "STATUS_STOP_END_STEP"}

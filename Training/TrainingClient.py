@@ -28,10 +28,10 @@ BATCH_SIZE = 32   #The number of experiences for each replay
 MEMORY_SIZE = 100000 #The size of the batch for storing experiences
 SAVE_NETWORK = 100  # After this number of episodes, the DQN model is saved for testing later. 
 INITIAL_REPLAY_SIZE = 1000 #The number of experiences are stored in the memory batch before starting replaying
-INPUTNUM = 198 #The number of input values for the DQN model
 ACTIONNUM = 6  #The number of actions output from the DQN model
-MAP_MAX_X = 21 #Width of the Map
-MAP_MAX_Y = 9  #Height of the Map
+MAP_MAX_X = 4 #Width of the Map
+MAP_MAX_Y = 3  #Height of the Map
+INPUTNUM = MAP_MAX_X * MAP_MAX_Y + 3 #The number of input values for the DQN model
 
 # Initialize a DQN model and a memory batch for storing experiences
 DQNAgent = DQN(INPUTNUM, ACTIONNUM)
@@ -47,7 +47,7 @@ train = False #The variable is used to indicate that the replay starts, and the 
 for episode_i in range(0, N_EPISODE):
     try:
         # Choosing a map in the list
-        mapID = np.random.randint(1, 6) #Choosing a map ID from 5 maps in Maps folder randomly
+        mapID = 0 #np.random.randint(1, 6) #Choosing a map ID from 5 maps in Maps folder randomly
         posID_x = np.random.randint(MAP_MAX_X) #Choosing a initial position of the DQN agent on X-axes randomly
         posID_y = np.random.randint(MAP_MAX_Y) #Choosing a initial position of the DQN agent on Y-axes randomly
         #Creating a request for initializing a map, initial position, the initial energy, and the maximum number of steps of the DQN agent
@@ -103,9 +103,9 @@ for episode_i in range(0, N_EPISODE):
 
         
         #Print the training information after the episode
-        print('Episode %d ends. Number of steps is: %d. Accumulated Reward = %.2f. Epsilon = %.2f .Termination code: %d' % (
-            episode_i + 1, step + 1, total_reward, DQNAgent.epsilon, terminate))
-        
+        print('Episode %d: Number of steps: %d. Accumulated Reward = %.2f. Total Score = %.2f .Epsilon = %.2f .%s' % (
+            episode_i + 1, step + 1, total_reward, minerEnv.accumulated_gold ,DQNAgent.epsilon, minerEnv.how_terminate))
+        minerEnv.accumulated_gold = 0
         #Decreasing the epsilon if the replay starts
         if train == True:
             DQNAgent.update_epsilon()

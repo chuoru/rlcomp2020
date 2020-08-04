@@ -10,8 +10,8 @@ POS_X = 0 #Has change the POS_X, POS_Y from 0 to random.randint
 POS_Y = 0
 E = 50
 MAX_STEP = 50
-W = 21
-H = 9
+W = 4
+H = 3
 
 class ObstacleInfo:
     # initial energy for obstacles: Land (key = 0): -1, Forest(key = -1): 0 (random), Trap(key = -2): -10, Swamp (key = -3): -5

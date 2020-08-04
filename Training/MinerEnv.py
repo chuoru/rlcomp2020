@@ -8,13 +8,14 @@ from copy import deepcopy
 TreeID = 1
 TrapID = 2
 SwampID = 3
+
 SIGHT_X, SIGHT_Y = 2,2
 
 class MinerEnv:
     def __init__(self, host, port):
         self.socket = GameSocket(host, port)
         self.state = State()
-        
+        self.accumulated_gold = 0
         self.score_pre = self.state.score#Storing the last score for designing the reward function
 
     def start(self): #connect to server
@@ -53,9 +54,6 @@ class MinerEnv:
                     map_temp[i, j] = 0
         return map_temp
 
-
-
-
     # Functions are customized by client
     def get_state(self):
         # Building the map
@@ -71,7 +69,7 @@ class MinerEnv:
                 if self.state.mapInfo.gold_amount(i, j) > 0:
                     view[i, j] = self.state.mapInfo.gold_amount(i, j)
 
-        view = self.change_sight(view, SIGHT_X, SIGHT_Y)
+        # view = self.change_sight(view, SIGHT_X, SIGHT_Y)
 
         DQNState = view.flatten().tolist() #Flattening the map matrix to a vector
         
@@ -80,10 +78,10 @@ class MinerEnv:
         DQNState.append(self.state.y)
         DQNState.append(self.state.energy)
         #Add position of bots 
-        for player in self.state.players:
-            if player["playerId"] != self.state.id:
-                DQNState.append(player["posx"])
-                DQNState.append(player["posy"])
+        # for player in self.state.players:
+        #     if player["playerId"] != self.state.id:
+        #         DQNState.append(player["posx"])
+        #         DQNState.append(player["posy"])
                 
         #Convert the DQNState from list to array for training
         DQNState = np.array(DQNState)
@@ -95,6 +93,8 @@ class MinerEnv:
         reward = 0
         score_action = self.state.score - self.score_pre
         self.score_pre = self.state.score
+        self.accumulated_gold += self.state.score if self.state.score > 0 else 0
+
         if score_action > 0:
             #If the DQN agent crafts golds, then it should obtain a positive reward (equal score_action)
             reward += 5 * score_action
@@ -119,4 +119,6 @@ class MinerEnv:
     def check_terminate(self):
         #Checking the status of the game
         #it indicates the game ends or is playing
+        self.how_terminate = ['STATUS_PLAYING','STATUS_ELIMINATED_WENT_OUT_MAP','STATUS_ELIMINATED_OUT_OF_ENERGY',
+    'STATUS_ELIMINATED_INVALID_ACTION', 'STATUS_STOP_EMPTY_GOLD', 'STATUS_STOP_END_STEP'][self.state.status]
         return self.state.status != State.STATUS_PLAYING

@@ -77,7 +77,7 @@ class MinerEnv:
             #     DQNState.append(player["posx"])
             #     DQNState.append(player["posy"])
             break
-        exec('DQNState.append(0);'*6)
+        # exec('DQNState.append(0);'*6)
 
         #Convert the DQNState from list to array
         DQNState = np.array(DQNState)
