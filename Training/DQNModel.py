@@ -19,7 +19,7 @@ class DQN:
             self,
             input_dim, #The number of inputs for the DQN network
             action_space, #The number of actions for the DQN network
-            gamma = 0.99, #The discount factor
+            gamma = 0.8, #The discount factor
             epsilon = 1, #Epsilon - the exploration factor
             epsilon_min = 0.01, #The minimum epsilon 
             epsilon_decay = 0.999,#The decay epislon for each update_epsilon time
