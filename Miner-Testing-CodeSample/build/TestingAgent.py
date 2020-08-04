@@ -20,12 +20,12 @@ if len(sys.argv) == 3:
     PORT = int(sys.argv[2])
 
 # load json and create model
-json_file = open('RLModelSample.json', 'r')
+json_file = open('../../Miner-Training-Local-CodeSample/TrainedModels/DQNmodel_20200804-2014_ep600.json', 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 DQNAgent = model_from_json(loaded_model_json)
 # load weights into new model
-DQNAgent.load_weights("RLModelSample.h5")
+DQNAgent.load_weights("../../Miner-Training-Local-CodeSample/TrainedModels/DQNmodel_20200804-2014_ep600.h5")
 print("Loaded model from disk")
 status_map = {0: "STATUS_PLAYING", 1: "STATUS_ELIMINATED_WENT_OUT_MAP", 2: "STATUS_ELIMINATED_OUT_OF_ENERGY",
                   3: "STATUS_ELIMINATED_INVALID_ACTION", 4: "STATUS_STOP_EMPTY_GOLD", 5: "STATUS_STOP_END_STEP"}
@@ -35,13 +35,22 @@ try:
     minerEnv.start()  # Connect to the game
     minerEnv.reset()
     s = minerEnv.get_state()  ##Getting an initial state
+    i = 0
+    s_test = np.array([10, 6, 10, 0, 10, 10, 9, 9, 8])
+    print(DQNAgent.predict(s_test.reshape(1, len(s_test))))
     while not minerEnv.check_terminate():
         try:
-            action = np.argmax(DQNAgent.predict(s.reshape(1, len(s))))  # Getting an action from the trained model
+            action = np.argmax(DQNAgent.predict(s.reshape(1, len(s))))
+            print(DQNAgent.predict(s.reshape(1, len(s))))
             print("next action = ", action)
             minerEnv.step(str(action))  # Performing the action in order to obtain the new state
             s_next = minerEnv.get_state()  # Getting a new state
             s = s_next
+            print("step:", i)
+            if len(s) < 9:
+                for index in range(9 - len(s)):
+                    s = np.append(s, [0])
+            i += 1
         except Exception as e:
             import traceback
             traceback.print_exc()

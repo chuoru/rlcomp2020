@@ -28,7 +28,7 @@ BATCH_SIZE = 32   #The number of experiences for each replay
 MEMORY_SIZE = 100000 #The size of the batch for storing experiences
 SAVE_NETWORK = 100  # After this number of episodes, the DQN model is saved for testing later. 
 INITIAL_REPLAY_SIZE = 1000 #The number of experiences are stored in the memory batch before starting replaying
-INPUTNUM = 198 #The number of input values for the DQN model
+INPUTNUM = 9 #The number of input values for the DQN model
 ACTIONNUM = 6  #The number of actions output from the DQN model
 MAP_MAX_X = 21 #Width of the Map
 MAP_MAX_Y = 9  #Height of the Map
@@ -58,7 +58,7 @@ for episode_i in range(0, N_EPISODE):
         # Getting the initial state
         minerEnv.reset() #Initialize the game environment
         s = minerEnv.get_state()#Get the state after reseting. 
-                                #This function (get_state()) is an example of creating a state for the DQN model 
+                                #This function (get_state()) is an example of creating a state for the DQN model
         total_reward = 0 #The amount of rewards for the entire episode
         terminate = False #The variable indicates that the episode ends
         maxStep = minerEnv.state.mapInfo.maxStep #Get the maximum number of steps for each episode in training

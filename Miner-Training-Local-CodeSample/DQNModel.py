@@ -9,6 +9,7 @@ from keras.layers import Dense, Activation
 from keras import optimizers
 from keras import backend as K
 import tensorflow as tf
+from tensorflow.losses import huber_loss
 from random import random, randrange
 
 
@@ -19,12 +20,12 @@ class DQN:
             self,
             input_dim, #The number of inputs for the DQN network
             action_space, #The number of actions for the DQN network
-            gamma = 0.99, #The discount factor
+            gamma = 0.95, #The discount factor
             epsilon = 1, #Epsilon - the exploration factor
-            epsilon_min = 0.01, #The minimum epsilon 
-            epsilon_decay = 0.999,#The decay epislon for each update_epsilon time
-            learning_rate = 0.00025, #The learning rate for the DQN network
-            tau = 0.125, #The factor for updating the DQN target network from the DQN network
+            epsilon_min = 0.05, #The minimum epsilon
+            epsilon_decay = 0.995,#The decay epislon for each update_epsilon time
+            learning_rate = 0.01, #The learning rate for the DQN network
+            tau = 0.05, #The factor for updating the DQN target network from the DQN network
             model = None, #The DQN model
             target_model = None, #The DQN target model 
             sess=None
@@ -51,26 +52,24 @@ class DQN:
       self.sess.run( tf.compat.v1.global_variables_initializer()) 
       
     def create_model(self):
-      #Creating the network
-      #Two hidden layers (300,300), their activation is ReLu
       #One output layer with action_space of nodes, activation is linear.
       model = Sequential()
-      model.add(Dense(300, input_dim=self.input_dim))
+      model.add(Dense(32, input_dim=self.input_dim))
       model.add(Activation('relu'))
-      model.add(Dense(300))
+      model.add(Dense(32))
       model.add(Activation('relu'))
       model.add(Dense(self.action_space))
       model.add(Activation('linear'))    
-      #adam = optimizers.adam(lr=self.learning_rate)
-      sgd = optimizers.SGD(lr=self.learning_rate, decay=1e-6, momentum=0.95)
-      model.compile(optimizer = sgd,
-              loss='mse')
+      #adam = optimizers.adam(lr=self.learning_rate, clipnorm=1)
+      rmsprop = optimizers.RMSprop(lr=self.learning_rate, rho=0.9, decay=1e-6)
+      #sgd = optimizers.SGD(lr=self.learning_rate, decay=1e-6, momentum=0.95, clipnorm=1)
+      model.compile(optimizer=rmsprop,
+              loss=huber_loss)
       return model
   
-    
     def act(self,state):
       #Get the index of the maximum Q values      
-      a_max = np.argmax(self.model.predict(state.reshape(1,len(state))))      
+      a_max = np.argmax(self.model.predict(state.reshape(1,len(state))))
       if (random() < self.epsilon):
         a_chosen = randrange(self.action_space)
       else:
@@ -97,15 +96,15 @@ class DQN:
           Q_future = np.max(self.target_model.predict(new_state.reshape(1,len(new_state))))
           targets[i,action] = reward + Q_future * self.gamma
       #Training
-      loss = self.model.train_on_batch(inputs, targets)  
-    
+      self.model.fit(inputs, targets, epochs=1, verbose=0)
+      # loss = self.model.train_on_batch(inputs, targets)
+
     def target_train(self): 
       weights = self.model.get_weights()
       target_weights = self.target_model.get_weights()
       for i in range(0, len(target_weights)):
         target_weights[i] = weights[i] * self.tau + target_weights[i] * (1 - self.tau)
-      
-      self.target_model.set_weights(target_weights) 
+      self.target_model.set_weights(target_weights)
     
     
     def update_epsilon(self):
@@ -114,7 +113,6 @@ class DQN:
     
     
     def save_model(self,path, model_name):
-        # serialize model to JSON
         model_json = self.model.to_json()
         with open(path + model_name + ".json", "w") as json_file:
             json_file.write(model_json)
