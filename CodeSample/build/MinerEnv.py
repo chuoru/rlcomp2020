@@ -13,10 +13,12 @@ SwampID = 3
 SIGHT_X, SIGHT_Y = 2,2
 
 class MinerEnv:
+
+
     def __init__(self, host, port):
         self.socket = GameSocket(host, port)
         self.state = State()
-        
+        self.init_map = []
         self.score_pre = self.state.score#Storing the last score for designing the reward function
         
     def start(self): #connect to server
@@ -61,8 +63,8 @@ class MinerEnv:
                     view[i, j] = -SwampID
                 if self.state.mapInfo.gold_amount(i, j) > 0:
                     view[i, j] = self.state.mapInfo.gold_amount(i, j)
-
-
+        if self.init_map == []:
+            self.init_map = view[:]
 
         DQNState = view.flatten().tolist()#Flattening the map matrix to a vector
         
