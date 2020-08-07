@@ -23,7 +23,7 @@ class DQN:
             gamma = 0.95, #The discount factor
             epsilon = 1, #Epsilon - the exploration factor
             epsilon_min = 0.05, #The minimum epsilon
-            epsilon_decay = 0.995,#The decay epislon for each update_epsilon time
+            epsilon_decay = 0.999,#The decay epislon for each update_epsilon time
             learning_rate = 0.01, #The learning rate for the DQN network
             tau = 0.05, #The factor for updating the DQN target network from the DQN network
             model = None, #The DQN model
@@ -54,9 +54,9 @@ class DQN:
     def create_model(self):
       #One output layer with action_space of nodes, activation is linear.
       model = Sequential()
-      model.add(Dense(32, input_dim=self.input_dim))
+      model.add(Dense(64, input_dim=self.input_dim))
       model.add(Activation('relu'))
-      model.add(Dense(32))
+      model.add(Dense(64))
       model.add(Activation('relu'))
       model.add(Dense(self.action_space))
       model.add(Activation('linear'))    
@@ -68,7 +68,7 @@ class DQN:
       return model
   
     def act(self,state):
-      #Get the index of the maximum Q values      
+      #Get the index of the maximum Q values
       a_max = np.argmax(self.model.predict(state.reshape(1,len(state))))
       if (random() < self.epsilon):
         a_chosen = randrange(self.action_space)
