@@ -8,6 +8,7 @@ from bot2 import Bot2
 from bot3 import Bot3
 from random import randrange
 
+BOT_DISABLE = True
 
 class ObstacleInfo:
     # initial energy for obstacles: Land (key = 0): -1, Forest(key = -1): 0 (random), Trap(key = -2): -10, Swamp (key = -3): -5
@@ -119,7 +120,9 @@ class GameSocket:
         self.craftMap = {}  # cells that players craft at current step, key: x_y, value: number of players that craft at (x,y)
 
     def init_bots(self):
-        self.bots = [Bot1(2), Bot2(3), Bot3(4)]  # use bot1(id=2), bot2(id=3), bot3(id=4)
+        if not BOT_DISABLE:
+            self.bots = [Bot1(2), Bot2(3), Bot3(4)]  # use bot1(id=2), bot2(id=3), bot3(id=4)
+        else: self.bots = []
         for (bot) in self.bots:  # at the beginning, all bots will have same position, energy as player
             bot.info.posx = self.user.posx
             bot.info.posy = self.user.posy
@@ -129,7 +132,7 @@ class GameSocket:
             bot.info.score = 0
             self.stepState.players.append(bot.info)
         self.userMatch.gameinfo.numberOfPlayers = len(self.stepState.players)
-        print("numberOfPlayers: ", 0)    #self.userMatch.gameinfo.numberOfPlayers)
+        print('-'*20) #("numberOfPlayers: ", self.userMatch.gameinfo.numberOfPlayers)
 
     def reset(self, requests):  # load new game by given request: [map id (filename), posx, posy, initial energy]
         # load new map
@@ -241,7 +244,7 @@ class GameSocket:
 
         else:  # reset game
             requests = message.split(",")
-            print("Reset game: ", requests)
+            # print("Reset game: ", requests)
             self.reset(requests)
 
     def step_action(self, user, action):

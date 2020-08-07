@@ -5,11 +5,16 @@ import sys
 from keras.models import model_from_json
 from MinerEnv import MinerEnv
 import numpy as np
+import os
+
+os.environ['MODEL'] = '../../Training/TrainedModels/'
+lated_ver = os.path.splitext(max([i for i in os.listdir(os.environ.get('MODEL')) if i[-3:] == '.h5']))[0]
 
 def print_map(map, action_ls, x = 0, y = 0):
+    map = np.transpose(map)
     action_to_dir = [(-1,0), (1,0), (0,-1), (0, 1)]
-    action_to_dir2 = '<>^v'
-    refer = [action_to_dir2[index] for index in action_ls if index < 4]
+    action_to_dir2 = '<>^v' + chr(5856) + '$'
+    refer = [action_to_dir2[index] for index in action_ls]
     positions = [(0,0)]
     for i in action_ls:
         if i < 4:
@@ -32,6 +37,7 @@ def print_map(map, action_ls, x = 0, y = 0):
     print()
     print(' '.join(refer))
 
+LAST_ACTION = True
 ACTION_GO_LEFT = 0
 ACTION_GO_RIGHT = 1
 ACTION_GO_UP = 2
@@ -46,12 +52,18 @@ if len(sys.argv) == 3:
     PORT = int(sys.argv[2])
 
 # load json and create model
-json_file = open('../../Training/TrainedModels/DQNmodel_20200806-0412_ep6900.json', 'r')
+if LAST_ACTION:
+    json_file = open(os.path.join(os.environ.get('MODEL'), lated_ver) + '.json', 'r')
+else:
+    json_file = open('../../Training/TrainedModels/DQNmodel_20200806-2324_ep1300.json', 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 DQNAgent = model_from_json(loaded_model_json)
 # load weights into new model
-DQNAgent.load_weights('../../Training/TrainedModels/DQNmodel_20200806-0412_ep6900.h5')
+if LAST_ACTION:
+    DQNAgent.load_weights(os.path.join(os.environ.get('MODEL'), lated_ver) + '.h5', 'r')
+else:
+    DQNAgent.load_weights('../../Training/TrainedModels/DQNmodel_20200806-2324_ep1300.h5')
 print("Loaded model from disk")
 status_map = {0: "STATUS_PLAYING", 1: "STATUS_ELIMINATED_WENT_OUT_MAP", 2: "STATUS_ELIMINATED_OUT_OF_ENERGY",
                   3: "STATUS_ELIMINATED_INVALID_ACTION", 4: "STATUS_STOP_EMPTY_GOLD", 5: "STATUS_STOP_END_STEP"}
@@ -64,10 +76,9 @@ try:
     s = minerEnv.get_state()  ##Getting an initial state
     while not minerEnv.check_terminate():
         try:
-            print(DQNAgent)
             action = np.argmax(DQNAgent.predict(s.reshape(1, len(s))))  # Getting an action from the trained model
             action_ls.append(action)
-            print("next action = ", action)
+            # print("next action = ", action)
             print('the array %s' %DQNAgent.predict(s.reshape(1, len(s))))
             minerEnv.step(str(action))  ############ Performing the action in order to obtain the new state
             s_next = minerEnv.get_state()  ############# Getting a new state
@@ -82,4 +93,4 @@ try:
 except Exception as e:
     import traceback
     traceback.print_exc()
-print("End game.")
+print(lated_ver)

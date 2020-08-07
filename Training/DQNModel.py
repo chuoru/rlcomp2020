@@ -19,11 +19,11 @@ class DQN:
             self,
             input_dim, #The number of inputs for the DQN network
             action_space, #The number of actions for the DQN network
-            gamma = 0.8, #The discount factor
+            gamma = 0.9, #The discount factor
             epsilon = 1, #Epsilon - the exploration factor
-            epsilon_min = 0.01, #The minimum epsilon 
-            epsilon_decay = 0.999,#The decay epislon for each update_epsilon time
-            learning_rate = 0.00025, #The learning rate for the DQN network
+            epsilon_min = 0.05, #The minimum epsilon
+            epsilon_decay = 0.9994,#The decay epislon for each update_epsilon time
+            learning_rate = 0.0025, #The learning rate for the DQN network
             tau = 0.125, #The factor for updating the DQN target network from the DQN network
             model = None, #The DQN model
             target_model = None, #The DQN target model 
@@ -55,9 +55,9 @@ class DQN:
       #Two hidden layers (300,300), their activation is ReLu
       #One output layer with action_space of nodes, activation is linear.
       model = Sequential()
-      model.add(Dense(200, input_dim=self.input_dim))
+      model.add(Dense(16, input_dim=self.input_dim))
       model.add(Activation('relu'))
-      model.add(Dense(200))
+      model.add(Dense(16))
       model.add(Activation('relu'))
       model.add(Dense(self.action_space))
       model.add(Activation('linear'))    

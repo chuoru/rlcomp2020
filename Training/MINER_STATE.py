@@ -31,7 +31,7 @@ class MapInfo:
             for ob in self.obstacles:
                 if cob["posx"] == ob["posx"] and cob["posy"] == ob["posy"]:
                     newOb = False
-                    #print("cell(", cob["posx"], ",", cob["posy"], ") change type from: ", ob["type"], " -> ",
+                    # print("cell(", cob["posx"], ",", cob["posy"], ") change type from: ", ob["type"], " -> ",
                     #      cob["type"], " / value: ", ob["value"], " -> ", cob["value"])
                     ob["type"] = cob["type"]
                     ob["value"] = cob["value"]
