@@ -86,31 +86,29 @@ class MinerEnv:
     # Functions are customized by client
     def get_state(self):
         # Building the map
-        # view = np.zeros([self.state.mapInfo.max_x + 1, self.state.mapInfo.max_y + 1], dtype=int)
-        # for i in range(self.state.mapInfo.max_x + 1):
-        #     for j in range(self.state.mapInfo.max_y + 1):
-        #         if self.state.mapInfo.get_obstacle(i, j) == TreeID:  # Tree
-        #             view[i, j] = -TreeID
-        #         if self.state.mapInfo.get_obstacle(i, j) == TrapID:  # Trap
-        #             view[i, j] = -TrapID
-        #         if self.state.mapInfo.get_obstacle(i, j) == SwampID: # Swamp
-        #             view[i, j] = -SwampID
-        #         if self.state.mapInfo.gold_amount(i, j) > 0:
-        #             view[i, j] = self.state.mapInfo.gold_amount(i, j)
-        reduce_view = self.reduce_sight(SIGHT)
-        DQNState = reduce_view.flatten().tolist() #Flattening the map matrix to a vector
-        # Add position and energy of agent to the DQNState
-        DQNState.append(self.state.x)
-        DQNState.append(self.state.y)
-        DQNState.append(self.state.energy)
+        view = np.zeros([self.state.mapInfo.max_x + 1, self.state.mapInfo.max_y + 1, 4], dtype=int)
+        for i in range(self.state.mapInfo.max_x + 1):
+            for j in range(self.state.mapInfo.max_y + 1):
+                if self.state.mapInfo.get_obstacle(i, j) == TreeID:  # Tree
+                    view[i, j, 0] = -TreeID
+                if self.state.mapInfo.get_obstacle(i, j) == TrapID:  # Trap
+                    view[i, j, 0] = -TrapID
+                if self.state.mapInfo.get_obstacle(i, j) == SwampID: # Swamp
+                    view[i, j, 0] = -SwampID
+                if self.state.mapInfo.gold_amount(i, j) > 0:
+                    view[i, j, 1] = self.state.mapInfo.gold_amount(i, j)
+
+        view[self.state.x, self.state.y, 2] = 1
         # Add position of bots
-        # for player in self.state.players:
-        #     if player["playerId"] != self.state.id:
-        #         DQNState.append(player["posx"])
-        #         DQNState.append(player["posy"])
+        for player in self.state.players:
+            if player["playerId"] != self.state.id:
+                view[player["posx"], player["posy"], 2] = -1
+
+        # Add position and energy of agent to the DQNState
+        view[self.state.x, self.state.y, 3] = self.state.energy
 
         # Convert the DQNState from list to array for training
-        DQNState = np.array(DQNState)
+        DQNState = np.array(view)
 
         return DQNState
 
