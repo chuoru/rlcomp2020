@@ -24,13 +24,15 @@ color = {
 'TREE' : (59, 198, 182), # (0,95,95)
 'BACKGROUND' : (44, 62, 80),
 'BOT' : (192, 192, 192),
-'FONT' : (46, 134, 193),}
+'FONT' : (46, 134, 193),
+'ACTIONS' : (236, 240, 241)}
 
 pg.init()
 pg.display.set_caption('DQN Miner Visualize')
 Surf = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 Surf.fill(color['BACKGROUND'])
 fontObj = pg.font.Font('freesansbold.ttf', 15)
+action_to_dir = '<>^vE$?????????'
 
 TreeID = 1
 TrapID = 2
@@ -45,6 +47,8 @@ class MinerEnv:
         self.gone_cell = []
         self.score_pre = self.state.score#Storing the last score for designing the reward function
         self.energy_pre = 50
+        self.slow_mode = False
+        self.actions = []
     def start(self): #connect to server
         self.socket.connect()
 
@@ -122,18 +126,39 @@ class MinerEnv:
         pg.draw.rect(Surf, color['MINER'], (X_MARGIN + self.state.x * TILE_SIZE, Y_MARGIN + self.state.y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
 
         #energy of the player
-        textSurfaceEnergy = fontObj.render('''Energy: %s '''%(self.state.energy), True, color['FONT'], color['BACKGROUND'])
+        textSurfaceEnergy = fontObj.render('Energy: %s '%(self.state.energy), True, color['FONT'], color['BACKGROUND'])
         textRectEnergy = textSurfaceEnergy.get_rect()
         textRectEnergy.right, textRectEnergy.top = WIN_WIDTH - 10, 10
         Surf.blit(textSurfaceEnergy, textRectEnergy)
+        textSurfaceScore = fontObj.render('Score: %s' %(self.state.score), True, color['GOLD'], color['BACKGROUND'])
+        textRectScore =  textSurfaceScore.get_rect()
+        textRectScore.right, textRectScore.top = WIN_WIDTH - 10, 30
+        Surf.blit(textSurfaceScore, textRectScore)
+        self.actions.append(action_to_dir[self.state.lastAction])
+        textSurfaceActions = fontObj.render(' '.join(self.actions), True, color['ACTIONS'], color['BACKGROUND'])
+        textRectActions =  textSurfaceActions.get_rect()
+        textRectActions.right, textRectActions.bottom = WIN_WIDTH - 10, WIN_HEIGHT - 5
+        Surf.blit(textSurfaceActions, textRectActions)
 
     def update_map_visualize(self):
         for event in pg.event.get():
             if event.type == QUIT:
                 pg.quit()
                 sys.exit()
+            if event.type == KEYUP and event.key == K_s:
+                self.slow_mode = not self.slow_mode
+            if event.type == KEYUP and event.key == K_p:
+                paused = True
+                while paused:
+                    for event in pg.event.get():
+                        if event.type == QUIT:
+                            pg.quit()
+                            sys.exit()
+                        if event.type == KEYUP and event.key == K_p:
+                            paused = False
+
         pg.display.update()
-        #time.sleep(0.3)
+        if self.slow_mode: time.sleep(0.1)
 
     # Functions are customized by client
     def get_state(self):
