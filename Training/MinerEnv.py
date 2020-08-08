@@ -4,6 +4,33 @@ from GAME_SOCKET_DUMMY import GameSocket #in testing version, please use GameSoc
 from MINER_STATE import State
 from copy import deepcopy
 
+import pygame as pg
+from pygame.locals import *
+import sys
+import time
+
+
+TILE_SIZE = 40
+MAP_WIDTH, MAP_HEIGHT = 5, 5
+X_MARGIN, Y_MARGIN = TILE_SIZE, TILE_SIZE
+WIN_WIDTH, WIN_HEIGHT = X_MARGIN + TILE_SIZE * MAP_WIDTH + 100, Y_MARGIN + TILE_SIZE * MAP_HEIGHT + 50
+
+
+color = {
+'GOLD' : (255, 255, 0),
+'SWAMP' : (120, 148, 132),
+'TRAP' : (255, 141, 56),
+'MINER' : (219, 119, 141),
+'TREE' : (59, 198, 182), # (0,95,95)
+'BACKGROUND' : (44, 62, 80),
+'BOT' : (192, 192, 192),
+'FONT' : (46, 134, 193),}
+
+pg.init()
+pg.display.set_caption('DQN Miner Visualize')
+Surf = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+Surf.fill(color['BACKGROUND'])
+fontObj = pg.font.Font('freesansbold.ttf', 15)
 
 TreeID = 1
 TrapID = 2
@@ -54,6 +81,7 @@ class MinerEnv:
                         self.state.mapInfo.max_y, self.state.y + sight_y)) and map_temp[i, j] < 0:
                     map_temp[i, j] = 0
         return map_temp
+
     def get_map(self):
         view = np.zeros([self.state.mapInfo.max_x + 1, self.state.mapInfo.max_y + 1], dtype=int)
         for i in range(self.state.mapInfo.max_x + 1):
@@ -67,6 +95,45 @@ class MinerEnv:
                 if self.state.mapInfo.gold_amount(i, j) > 0:
                     view[i, j] = self.state.mapInfo.gold_amount(i, j)
         return view
+
+    def visualize(self):
+        Surf.fill(color['BACKGROUND'])
+        pg.draw.line(Surf, (255, 0, 0), (X_MARGIN + TILE_SIZE * (self.state.mapInfo.max_x + 1), Y_MARGIN), (X_MARGIN + TILE_SIZE * (self.state.mapInfo.max_x + 1), Y_MARGIN + TILE_SIZE * (self.state.mapInfo.max_y + 1)), 4)
+        pg.draw.line(Surf, (255, 0, 0), (X_MARGIN, Y_MARGIN + TILE_SIZE * (self.state.mapInfo.max_y + 1)), (X_MARGIN + TILE_SIZE * (self.state.mapInfo.max_x + 1), Y_MARGIN + TILE_SIZE * (self.state.mapInfo.max_y + 1)), 4)
+        pg.draw.line(Surf, (255, 0, 0), (X_MARGIN + TILE_SIZE * (self.state.mapInfo.max_x + 1), Y_MARGIN), (X_MARGIN, Y_MARGIN), 4)
+        pg.draw.line(Surf, (255, 0, 0), (X_MARGIN, Y_MARGIN + TILE_SIZE * (self.state.mapInfo.max_y + 1)), (X_MARGIN, Y_MARGIN), 4)
+
+        self.map = self.get_map()
+
+        #draw the trap: orange, tree : green, swamp : dark green, bots: Grey and player : pynk
+        for i in range(len(self.map)):
+            for j in range(len(self.map[0])):
+                if self.map[i, j] == -TreeID:
+                    pg.draw.rect(Surf, color['TREE'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                if self.map[i, j] == -TrapID:
+                    pg.draw.rect(Surf, color['TRAP'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                if self.map[i, j] == -SwampID:
+                    pg.draw.rect(Surf, color['SWAMP'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                if self.state.mapInfo.gold_amount(i, j) > 0:
+                    pg.draw.rect(Surf, color['GOLD'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+        for bot in self.socket.bots:
+            i, j = bot.info.posx, bot.info.posy
+            pg.draw.rect(Surf, color['BOT'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+        pg.draw.rect(Surf, color['MINER'], (X_MARGIN + self.state.x * TILE_SIZE, Y_MARGIN + self.state.y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+
+        #energy of the player
+        textSurfaceEnergy = fontObj.render('''Energy: %s '''%(self.state.energy), True, color['FONT'], color['BACKGROUND'])
+        textRectEnergy = textSurfaceEnergy.get_rect()
+        textRectEnergy.right, textRectEnergy.top = WIN_WIDTH - 10, 10
+        Surf.blit(textSurfaceEnergy, textRectEnergy)
+
+    def update_map_visualize(self):
+        for event in pg.event.get():
+            if event.type == QUIT:
+                pg.quit()
+                sys.exit()
+        pg.display.update()
+        #time.sleep(0.3)
 
     # Functions are customized by client
     def get_state(self):

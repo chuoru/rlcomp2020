@@ -7,7 +7,6 @@ import pandas as pd
 import datetime 
 import numpy as np
 
-
 HOST = "localhost"
 PORT = 1111
 if len(sys.argv) == 3:
@@ -67,6 +66,8 @@ for episode_i in range(0, N_EPISODE):
             action = DQNAgent.act(s)  # Getting an action from the DQN model from the state (s)
             minerEnv.step(str(action))  # Performing the action in order to obtain the new state
             s_next = minerEnv.get_state()  # Getting a new state
+            minerEnv.visualize()
+            minerEnv.update_map_visualize()
             reward = minerEnv.get_reward()  # Getting a reward
             terminate = minerEnv.check_terminate()  # Checking the end status of the episode
 
