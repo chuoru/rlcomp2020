@@ -91,7 +91,7 @@ for episode_i in range(0, N_EPISODE):
                 pd.DataFrame(save_data).to_csv(f, encoding='utf-8', index=False, header=False)
             
             if terminate == True:
-                minerEnv.actions = []
+                minerEnv.actions = [str([minerEnv.state.x,minerEnv.state.y])]
                 #If the episode ends, then go to the next episode
                 break
 

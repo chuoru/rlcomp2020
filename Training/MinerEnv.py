@@ -10,7 +10,7 @@ import sys
 import time
 
 
-TILE_SIZE = 40
+TILE_SIZE = 70
 MAP_WIDTH, MAP_HEIGHT = 5, 5
 X_MARGIN, Y_MARGIN = TILE_SIZE, TILE_SIZE
 WIN_WIDTH, WIN_HEIGHT = X_MARGIN + TILE_SIZE * MAP_WIDTH + 100, Y_MARGIN + TILE_SIZE * MAP_HEIGHT + 50
@@ -25,14 +25,31 @@ color = {
 'BACKGROUND' : (44, 62, 80),
 'BOT' : (192, 192, 192),
 'FONT' : (46, 134, 193),
-'ACTIONS' : (236, 240, 241)}
+'ACTIONS' : (236, 240, 241),
+'TRANS' : (255,255,255,255),}
 
 pg.init()
 pg.display.set_caption('DQN Miner Visualize')
 Surf = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 Surf.fill(color['BACKGROUND'])
 fontObj = pg.font.Font('freesansbold.ttf', 15)
-action_to_dir = '<>^vE$?????????'
+action_to_dir = '<>^vE$??'
+
+img_ = {
+'trap_img' : pg.image.load('Maps/trap.png'),
+'nothing_img' : pg.image.load('Maps/nothing.png'),
+'miner_img' : pg.image.load('Maps/miner.PNG').convert_alpha(),
+'swamp_img' : pg.image.load('Maps/swamp.png'),
+'tree_img' : pg.image.load('Maps/tree.png'),
+'gold_img' : pg.image.load('Maps/gold.JPG'),
+'bot_img' : pg.image.load('Maps/bot.png').convert_alpha(),
+'digging_img' : pg.image.load('Maps/digging.png').convert_alpha(),
+'charging_img' : pg.image.load('Maps/charging.png').convert_alpha(),
+# 'dumb1_img' : pg.image.load('Maps/dumb1.png').convert_alpha(),
+'dumb_img' : pg.image.load('Maps/dumb.png').convert_alpha(),}
+
+for i, j in img_.items():
+    img_[i] = pg.transform.scale(j, (TILE_SIZE, TILE_SIZE))
 
 TreeID = 1
 TrapID = 2
@@ -48,7 +65,7 @@ class MinerEnv:
         self.score_pre = self.state.score#Storing the last score for designing the reward function
         self.energy_pre = 50
         self.slow_mode = False
-        self.actions = []
+        self.actions = [str([self.state.x, self.state.y])]
     def start(self): #connect to server
         self.socket.connect()
 
@@ -113,18 +130,37 @@ class MinerEnv:
         for i in range(len(self.map)):
             for j in range(len(self.map[0])):
                 if self.map[i, j] == -TreeID:
-                    pg.draw.rect(Surf, color['TREE'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                    # pg.draw.rect(Surf, color['TREE'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                    Surf.blit(img_['tree_img'],(X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE))
                 if self.map[i, j] == -TrapID:
-                    pg.draw.rect(Surf, color['TRAP'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                    # pg.draw.rect(Surf, color['TRAP'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                    Surf.blit(img_['trap_img'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE))
                 if self.map[i, j] == -SwampID:
-                    pg.draw.rect(Surf, color['SWAMP'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                    # pg.draw.rect(Surf, color['SWAMP'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                    Surf.blit(img_['swamp_img'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE))
                 if self.state.mapInfo.gold_amount(i, j) > 0:
-                    pg.draw.rect(Surf, color['GOLD'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                    # pg.draw.rect(Surf, color['GOLD'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                    Surf.blit(img_['gold_img'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE))
+                    textSurfaceGold = fontObj.render('%s' % (self.state.mapInfo.gold_amount(i,j)), True, (10,10,10))
+                    textRectGold = textSurfaceGold.get_rect()
+                    textRectGold.centerx, textRectGold.top = X_MARGIN + i * TILE_SIZE + TILE_SIZE // 2, Y_MARGIN + j * TILE_SIZE
+                    Surf.blit(textSurfaceGold, textRectGold)
+                if self.map[i, j] == 0:
+                    Surf.blit(img_['nothing_img'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE))
         for bot in self.socket.bots:
             i, j = bot.info.posx, bot.info.posy
-            pg.draw.rect(Surf, color['BOT'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
-        pg.draw.rect(Surf, color['MINER'], (X_MARGIN + self.state.x * TILE_SIZE, Y_MARGIN + self.state.y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
-
+            #pg.draw.rect(Surf, color['BOT'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+            Surf.blit(img_['bot_img'], (X_MARGIN + i * TILE_SIZE, Y_MARGIN + j * TILE_SIZE))
+        #draw the agent
+        # pg.draw.rect(Surf, color['MINER'], (X_MARGIN + self.state.x * TILE_SIZE, Y_MARGIN + self.state.y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+        if self.state.lastAction == 4:
+            Surf.blit(img_['charging_img'], (X_MARGIN + self.state.x * TILE_SIZE, Y_MARGIN + self.state.y * TILE_SIZE))
+        elif self.state.lastAction == 5:
+            Surf.blit(img_['digging_img'], (X_MARGIN + self.state.x * TILE_SIZE, Y_MARGIN + self.state.y * TILE_SIZE))
+        # elif (0 < self.state.x < self.state.mapInfo.max_x) and (0 < self.state.y < self.state.mapInfo.max_y) and (self.map[self.state.x, self.state.y] < 0):
+        #     Surf.blit(img_['dumb1_img'], (X_MARGIN + self.state.x * TILE_SIZE, Y_MARGIN + self.state.y * TILE_SIZE))
+        else:
+            Surf.blit(img_['dumb_img'], (X_MARGIN + self.state.x * TILE_SIZE, Y_MARGIN + self.state.y * TILE_SIZE))
         #energy of the player
         textSurfaceEnergy = fontObj.render('Energy: %s '%(self.state.energy), True, color['FONT'], color['BACKGROUND'])
         textRectEnergy = textSurfaceEnergy.get_rect()
@@ -142,23 +178,28 @@ class MinerEnv:
 
     def update_map_visualize(self):
         for event in pg.event.get():
-            if event.type == QUIT:
+            if event.type == QUIT or event.type == KEYUP and event.key == K_ESCAPE:
                 pg.quit()
                 sys.exit()
-            if event.type == KEYUP and event.key == K_s:
+            if event.type == KEYUP and event.key == K_s: #press s for slow_motion/ normal
+                self.time_slow = 0.3
                 self.slow_mode = not self.slow_mode
-            if event.type == KEYUP and event.key == K_p:
+            if event.type == KEYUP and event.key == K_RETURN:
+                self.time_slow = float(input('input the sec you want to slow down: \n'))
+                self.slow_mode = not self.slow_mode
+
+            if event.type == KEYUP and event.key == K_p: #press p for pause/ unpause
                 paused = True
                 while paused:
                     for event in pg.event.get():
-                        if event.type == QUIT:
+                        if event.type == QUIT or event.type == KEYUP and event.key == K_ESCAPE:
                             pg.quit()
                             sys.exit()
                         if event.type == KEYUP and event.key == K_p:
                             paused = False
 
         pg.display.update()
-        if self.slow_mode: time.sleep(0.1)
+        if self.slow_mode: time.sleep(self.time_slow)
 
     # Functions are customized by client
     def get_state(self):

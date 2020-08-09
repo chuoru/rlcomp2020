@@ -174,7 +174,7 @@ class GameSocket:
         # load all pre-defined maps from mapDir
         for filename in os.listdir(self.mapdir):
             print("Found: " + filename)
-            with open(os.path.join(self.mapdir, filename), 'r') as f:
+            with open(os.path.join(self.mapdir, filename), 'r', errors = 'ignore') as f:
                 self.maps[filename] = f.read()
 
     def map_info(self, map):  # get map info
